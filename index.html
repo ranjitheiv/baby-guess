@@ -129,64 +129,119 @@
 
     @keyframes spin { to { transform: rotate(360deg); } }
 
-    /* ── Calendars ── */
-    #calendars {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(380px, 1fr));
-      gap: 28px;
+    /* ── Calendar (single month view) ── */
+    #calendar-wrap {
       margin-bottom: 36px;
       animation: fadeUp 0.6s 0.12s ease both;
     }
 
-    .month-card {
-      background: var(--warm-white);
-      border-radius: 22px;
-      padding: 28px 24px;
-      box-shadow: var(--card-shadow);
-      transition: box-shadow 0.3s ease;
-    }
-
-    .month-card:hover { box-shadow: var(--card-hover); }
-
-    .month-title {
-      font-family: 'Playfair Display', serif;
-      font-size: 22px;
-      font-weight: 700;
-      color: var(--navy);
-      margin-bottom: 20px;
+    /* Outer wrapper: arrows sit outside the card on each side */
+    .cal-outer {
       display: flex;
       align-items: center;
-      justify-content: space-between;
+      gap: 16px;
     }
 
-    .month-title .guess-count {
-      font-family: 'DM Sans', sans-serif;
+    .nav-side {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+      flex-shrink: 0;
+      width: 52px;
+    }
+
+    .nav-btn {
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      border: 1.5px solid var(--blue-light);
+      background: var(--warm-white);
+      color: var(--blue-deep);
+      font-size: 20px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background 0.15s, border-color 0.15s, transform 0.15s;
+      box-shadow: var(--card-shadow);
+      line-height: 1;
+    }
+
+    .nav-btn:hover {
+      background: var(--blue-tint);
+      border-color: var(--blue-mid);
+      transform: scale(1.08);
+    }
+
+    .nav-btn:disabled {
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .nav-label {
+      font-size: 11px;
+      font-weight: 500;
+      color: var(--light-mid);
+      letter-spacing: 0.06em;
+      text-align: center;
+      opacity: 1;
+      transition: opacity 0.15s;
+    }
+
+    .nav-side.hidden .nav-label {
+      opacity: 0;
+    }
+
+    .month-card {
+      flex: 1;
+      background: var(--warm-white);
+      border-radius: 22px;
+      padding: 28px 28px;
+      box-shadow: var(--card-shadow);
+    }
+
+    .month-title-center {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+
+    .month-title-center h2 {
+      font-family: 'Playfair Display', serif;
+      font-size: 26px;
+      font-weight: 700;
+      color: var(--navy);
+      line-height: 1.1;
+    }
+
+    .month-title-center .guess-count {
       font-size: 12px;
       font-weight: 500;
       color: var(--light-mid);
       letter-spacing: 0.06em;
+      margin-top: 4px;
     }
 
     .calendar-grid {
       display: grid;
       grid-template-columns: repeat(7, 1fr);
-      gap: 4px;
+      gap: 5px;
     }
 
     .day-header {
       text-align: center;
-      font-size: 10px;
+      font-size: 11px;
       font-weight: 500;
       letter-spacing: 0.08em;
       color: var(--light-mid);
-      padding: 4px 0 8px;
+      padding: 4px 0 10px;
       text-transform: uppercase;
     }
 
     .day-cell {
-      border-radius: 10px;
-      padding: 6px 4px 6px;
-      min-height: 72px;
+      border-radius: 12px;
+      padding: 8px 4px 8px;
+      min-height: 90px;
       position: relative;
       transition: background 0.15s ease;
       display: flex;
@@ -194,7 +249,7 @@
       align-items: center;
     }
 
-    .day-cell.empty { background: transparent; min-height: 72px; }
+    .day-cell.empty { background: transparent; min-height: 90px; }
 
     .day-cell.has-date { background: transparent; }
     .day-cell.has-date:hover { background: var(--blue-tint); }
@@ -517,8 +572,33 @@
     <span class="spinner"></span> Loading guesses…
   </div>
 
-  <!-- Calendars -->
-  <div id="calendars" style="display:none;"></div>
+  <!-- Calendar single month with outside prev/next nav -->
+  <div id="calendar-wrap" style="display:none; margin-bottom:36px;">
+    <div class="cal-outer">
+
+      <!-- Left arrow: goes back to May -->
+      <div class="nav-side" id="nav-left" style="visibility:hidden;">
+        <button class="nav-btn" id="btn-prev" onclick="changeMonth(-1)">&#8592;</button>
+        <div class="nav-label" id="prev-label">May</div>
+      </div>
+
+      <!-- The calendar card — no nav inside -->
+      <div class="month-card">
+        <div class="month-title-center">
+          <h2 id="month-heading"></h2>
+          <div class="guess-count" id="month-guess-count"></div>
+        </div>
+        <div class="calendar-grid" id="calendar-grid"></div>
+      </div>
+
+      <!-- Right arrow: goes forward to June -->
+      <div class="nav-side" id="nav-right">
+        <button class="nav-btn" id="btn-next" onclick="changeMonth(1)">&#8594;</button>
+        <div class="nav-label" id="next-label">June</div>
+      </div>
+
+    </div>
+  </div>
 
   <!-- Popular dates -->
   <div id="popular-wrap" style="display:none;">
@@ -552,7 +632,6 @@
 <script>
   const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzawLru2PiFicn2VTricy1UAaRxA05-4e9exSnwmwvFedZvO6BKQvVUwANO2ac61mKz/exec";
 
-  // 20 distinct colours that work on white
   const BUBBLE_COLOURS = [
     "#3a7abf","#5aaa72","#c96e5a","#8a6abf","#c4a030",
     "#5aabb8","#bf5a75","#6a8abf","#bf8a40","#5abf9a",
@@ -560,36 +639,31 @@
     "#bf5aaa","#6ebf5a","#5a9ebf","#bf6e3a","#8abf5a"
   ];
 
+  // Months: May=5 and June=6, indexed as 0 and 1
+  const MONTHS = [
+    { year: 2026, month: 5, label: "May 2026" },
+    { year: 2026, month: 6, label: "June 2026" }
+  ];
+
+  let currentMonthIndex = 0; // start on May
+  let globalMap = {};        // date → guessers, populated after fetch
+  let globalGuesses = [];
+
   function colourForName(name) {
     let h = 0;
     for (let i = 0; i < name.length; i++) h = name.charCodeAt(i) + ((h << 5) - h);
     return BUBBLE_COLOURS[Math.abs(h) % BUBBLE_COLOURS.length];
   }
 
-  // ── Date normalisation ───────────────────────────────────
-  // Handles: "YYYY-MM-DD", "DD/MM/YYYY", "YYYY-MM-DDThh:mm:ssZ"
   function normaliseDate(raw) {
     if (!raw) return null;
     const s = String(raw).trim();
-
-    // ISO with time component
     if (s.includes("T")) return s.split("T")[0];
-
-    // Already YYYY-MM-DD
     if (/^\d{4}-\d{2}-\d{2}$/.test(s)) return s;
-
-    // DD/MM/YYYY
     if (/^\d{1,2}\/\d{1,2}\/\d{4}$/.test(s)) {
       const [d, m, y] = s.split("/");
       return `${y}-${m.padStart(2,"0")}-${d.padStart(2,"0")}`;
     }
-
-    // MM/DD/YYYY fallback (American)
-    if (/^\d{1,2}\/\d{1,2}\/\d{4}$/.test(s)) {
-      const [m, d, y] = s.split("/");
-      return `${y}-${m.padStart(2,"0")}-${d.padStart(2,"0")}`;
-    }
-
     return s;
   }
 
@@ -617,56 +691,66 @@
 
   // ── Render ───────────────────────────────────────────────
   function renderAll(rawGuesses) {
-    // Normalise all dates immediately
-    const guesses = rawGuesses.map(g => ({
+    globalGuesses = rawGuesses.map(g => ({
       name: String(g.name).trim(),
       date: normaliseDate(g.date)
     })).filter(g => g.date);
 
+    globalMap = {};
+    globalGuesses.forEach(g => {
+      if (!globalMap[g.date]) globalMap[g.date] = [];
+      globalMap[g.date].push({ name: g.name, colour: colourForName(g.name) });
+    });
+
     document.getElementById("status-message").style.display = "none";
+    document.getElementById("calendar-wrap").style.display = "block";
 
-    // Build date → guessers map
-    const map = {};
-    guesses.forEach(g => {
-      if (!map[g.date]) map[g.date] = [];
-      map[g.date].push({ name: g.name, colour: colourForName(g.name) });
-    });
-
-    // Calendars
-    const calEl = document.getElementById("calendars");
-    calEl.innerHTML = "";
-    [[2026,5,"May 2026"],[2026,6,"June 2026"]].forEach(([y,m,label]) => {
-      const count = guesses.filter(g => {
-        const [gy,gm] = g.date.split("-").map(Number);
-        return gy === y && gm === m;
-      }).length;
-      calEl.appendChild(buildMonthCard(y, m, label, map, count));
-    });
-    calEl.style.display = "grid";
-
-    // Popular dates
-    renderPopular(map);
-
+    renderMonth(currentMonthIndex);
+    renderPopular(globalMap);
     document.getElementById("popular-wrap").style.display = "block";
   }
 
-  function buildMonthCard(year, month, label, map, guessCount) {
-    const card = document.createElement("div");
-    card.className = "month-card";
+  // ── Month navigation ─────────────────────────────────────
+  function changeMonth(dir) {
+    currentMonthIndex = Math.max(0, Math.min(1, currentMonthIndex + dir));
+    renderMonth(currentMonthIndex);
+  }
 
-    const countLabel = guessCount === 0 ? "No guesses yet"
-      : guessCount === 1 ? "1 guess" : `${guessCount} guesses`;
+  function renderMonth(idx) {
+    const { year, month, label } = MONTHS[idx];
 
-    card.innerHTML = `
-      <div class="month-title">
-        ${label}
-        <span class="guess-count">${countLabel}</span>
-      </div>
-      <div class="calendar-grid" id="grid-${year}-${month}"></div>
-    `;
+    // Update heading
+    document.getElementById("month-heading").textContent = label;
 
-    const grid = card.querySelector(`#grid-${year}-${month}`);
+    // Guess count for this month
+    const count = globalGuesses.filter(g => {
+      const [gy, gm] = g.date.split("-").map(Number);
+      return gy === year && gm === month;
+    }).length;
+    const countLabel = count === 0 ? "No guesses yet"
+      : count === 1 ? "1 guess" : `${count} guesses`;
+    document.getElementById("month-guess-count").textContent = countLabel;
 
+    // Prev/next button states + labels
+    const onMay = idx === 0;
+    const onJune = idx === MONTHS.length - 1;
+
+    document.getElementById("btn-prev").disabled = onMay;
+    document.getElementById("btn-next").disabled = onJune;
+
+    // Hide the whole nav side (including label) when there's nowhere to go
+    document.getElementById("nav-left").style.visibility = onMay ? "hidden" : "visible";
+    document.getElementById("nav-right").style.visibility = onJune ? "hidden" : "visible";
+
+    // Label shows the month you'd navigate TO
+    document.getElementById("prev-label").textContent = idx > 0 ? MONTHS[idx - 1].label.split(" ")[0] : "";
+    document.getElementById("next-label").textContent = idx < MONTHS.length - 1 ? MONTHS[idx + 1].label.split(" ")[0] : "";
+
+    // Build grid
+    const grid = document.getElementById("calendar-grid");
+    grid.innerHTML = "";
+
+    // Day headers
     ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"].forEach(d => {
       const h = document.createElement("div");
       h.className = "day-header";
@@ -686,7 +770,7 @@
     for (let d = 1; d <= daysInMonth; d++) {
       const dateStr = `${year}-${String(month).padStart(2,"0")}-${String(d).padStart(2,"0")}`;
       const isDue = dateStr === "2026-05-21";
-      const onDay = map[dateStr] || [];
+      const onDay = globalMap[dateStr] || [];
 
       const cell = document.createElement("div");
       cell.className = "day-cell has-date" + (isDue ? " is-due" : "");
@@ -705,10 +789,9 @@
       cell.innerHTML = inner;
       grid.appendChild(cell);
     }
-
-    return card;
   }
 
+  // ── Popular dates ─────────────────────────────────────────
   function renderPopular(map) {
     const listEl = document.getElementById("popular-list");
     listEl.innerHTML = "";
@@ -717,7 +800,7 @@
       .map(([date, guessers]) => ({ date, count: guessers.length }))
       .filter(e => e.count > 0)
       .sort((a, b) => b.count - a.count)
-      .slice(0, 8); // Show top 8 at most
+      .slice(0, 8);
 
     if (entries.length === 0) {
       listEl.innerHTML = `<p class="popular-empty">No guesses yet — be the first to lock one in below!</p>`;
@@ -729,8 +812,8 @@
     entries.forEach((entry, i) => {
       const pct = Math.round((entry.count / maxCount) * 100);
       const countWord = entry.count === 1 ? "1 guess" : `${entry.count} guesses`;
-      const barWidth = Math.max(pct, 8); // minimum bar width so tiny bars still show
-      const textDark = pct < 25; // if bar is short, put label outside
+      const barWidth = Math.max(pct, 8);
+      const textDark = pct < 30;
 
       const row = document.createElement("div");
       row.className = "popular-row";
@@ -780,6 +863,8 @@
         showMsg("success", `🎉 Thanks ${name}! Your guess for ${formatDisplay(date)} is locked in. Good luck!`);
         nameEl.value = "";
         dateEl.value = "";
+        // Jump to the right month so they can see their bubble
+        currentMonthIndex = m === 5 ? 0 : 1;
         loadGuesses();
       } else if (data.error === "NAME_EXISTS") {
         showMsg("error", `Looks like someone called "${name}" has already guessed! If that's you and you want to change it, get in touch directly.`);
