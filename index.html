@@ -136,18 +136,49 @@
     }
 
     .month-card {
+      flex: 1; min-width: 0;
       background: var(--warm-white);
       border-radius: 22px;
-      padding: 28px 28px;
+      padding: 28px;
       box-shadow: var(--card-shadow);
     }
 
-    .month-nav {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      margin-bottom: 24px;
+    /* Desktop: outside side arrows */
+    .cal-outer { display: flex; align-items: center; gap: 16px; }
+
+    .nav-side {
+      display: flex; flex-direction: column;
+      align-items: center; gap: 6px;
+      flex-shrink: 0; width: 56px;
     }
+
+    .nav-label {
+      font-size: 11px; font-weight: 500;
+      color: var(--light-mid); letter-spacing: 0.06em; text-align: center;
+    }
+
+    /* Desktop title (centred, no inline arrows) */
+    .month-title-desktop { text-align: center; margin-bottom: 20px; }
+    .month-title-desktop h2 {
+      font-family: 'Playfair Display', serif;
+      font-size: 26px; font-weight: 700; color: var(--navy); line-height: 1.1;
+    }
+
+    /* Mobile title row (arrows flanking month name) — hidden on desktop */
+    .month-title-mobile {
+      display: none; align-items: center;
+      justify-content: space-between; margin-bottom: 14px; gap: 8px;
+    }
+    .month-title-mobile .nav-btn {
+      width: 38px; height: 38px; font-size: 17px;
+      box-shadow: none; background: var(--blue-tint); flex-shrink: 0;
+    }
+    .mobile-month-text { text-align: center; flex: 1; min-width: 0; }
+    .mobile-month-text h2 {
+      font-family: 'Playfair Display', serif;
+      font-size: 19px; font-weight: 700; color: var(--navy); line-height: 1.1;
+    }
+    .mobile-month-text .guess-count { font-size: 11px; margin-top: 2px; }
 
     .nav-btn {
       width: 40px;
@@ -163,6 +194,7 @@
       justify-content: center;
       transition: background 0.15s, border-color 0.15s, transform 0.15s;
       line-height: 1;
+      -webkit-tap-highlight-color: transparent;
     }
 
     .nav-btn:hover {
@@ -171,31 +203,9 @@
       transform: scale(1.08);
     }
 
-    .nav-btn:disabled {
-      opacity: 0.3;
-      cursor: not-allowed;
-      transform: none;
-    }
+    .nav-btn:disabled { opacity: 0; pointer-events: none; }
 
-    .month-title-center {
-      text-align: center;
-    }
-
-    .month-title-center h2 {
-      font-family: 'Playfair Display', serif;
-      font-size: 26px;
-      font-weight: 700;
-      color: var(--navy);
-      line-height: 1.1;
-    }
-
-    .month-title-center .guess-count {
-      font-size: 12px;
-      font-weight: 500;
-      color: var(--light-mid);
-      letter-spacing: 0.06em;
-      margin-top: 4px;
-    }
+    /* month-title-center replaced by month-title-desktop / month-title-mobile */
 
     .calendar-grid {
       display: grid;
@@ -272,55 +282,46 @@
       font-size: 9.5px;
       font-weight: 600;
       color: #fff;
-      cursor: default;
-      position: relative;
+      cursor: pointer;
       flex-shrink: 0;
       transition: transform 0.15s ease, box-shadow 0.15s ease;
       text-transform: uppercase;
-      letter-spacing: 0;
+      -webkit-tap-highlight-color: transparent;
+      user-select: none;
     }
 
-    .bubble:hover {
-      transform: scale(1.35);
-      box-shadow: 0 3px 14px rgba(0,0,0,0.22);
-      z-index: 20;
-    }
+    .bubble:hover  { transform: scale(1.3); box-shadow: 0 3px 12px rgba(0,0,0,0.22); z-index: 10; }
+    .bubble:active { transform: scale(1.1); }
+    .bubble.active { transform: scale(1.3); box-shadow: 0 3px 12px rgba(0,0,0,0.22); z-index: 10; }
 
-    .bubble::after {
-      content: attr(data-name);
-      position: absolute;
-      bottom: calc(100% + 7px);
-      left: 50%;
-      transform: translateX(-50%);
+    /* ── Floating tooltip (JS-driven, works on desktop + mobile tap) ── */
+    #bubble-tooltip {
+      position: fixed;
       background: var(--navy);
       color: #fff;
-      padding: 4px 10px;
-      border-radius: 6px;
-      font-size: 11px;
+      padding: 5px 12px;
+      border-radius: 8px;
+      font-size: 12px;
       font-weight: 400;
+      font-family: 'DM Sans', sans-serif;
       white-space: nowrap;
       pointer-events: none;
+      z-index: 9999;
       opacity: 0;
       transition: opacity 0.15s ease;
-      z-index: 30;
     }
 
-    .bubble::before {
+    #bubble-tooltip.show { opacity: 1; }
+
+    #bubble-tooltip::after {
       content: '';
       position: absolute;
-      bottom: calc(100% + 3px);
+      top: 100%;
       left: 50%;
       transform: translateX(-50%);
-      border: 4px solid transparent;
+      border: 5px solid transparent;
       border-top-color: var(--navy);
-      pointer-events: none;
-      opacity: 0;
-      transition: opacity 0.15s ease;
-      z-index: 30;
     }
-
-    .bubble:hover::after,
-    .bubble:hover::before { opacity: 1; }
 
     /* ── Popular dates section ── */
     #popular-wrap {
@@ -403,67 +404,19 @@
       right: -120px;
     }
 
-    /* .popular-count moved to expandable section above */
+    .popular-count {
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--mid);
+      width: 70px;
+      text-align: left;
+      flex-shrink: 0;
+    }
 
     .popular-empty {
       font-size: 14px;
       font-weight: 300;
       color: var(--light-mid);
-    }
-
-    /* Clickable count badge */
-    .popular-count {
-      cursor: pointer;
-      border-radius: 100px;
-      padding: 3px 10px;
-      background: var(--blue-tint);
-      color: var(--blue-deep);
-      font-size: 12px;
-      font-weight: 500;
-      transition: background 0.15s, color 0.15s;
-      white-space: nowrap;
-      user-select: none;
-      border: none;
-      font-family: 'DM Sans', sans-serif;
-    }
-
-    .popular-count:hover { background: var(--blue-light); }
-    .popular-count.open  { background: var(--navy); color: #fff; }
-
-    /* Expandable guesser panel */
-    .popular-guessers {
-      display: none;
-      flex-wrap: wrap;
-      gap: 8px;
-      padding: 12px 0 4px 32px;
-    }
-
-    .popular-guessers.open { display: flex; }
-
-    .guesser-chip {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      background: var(--blue-tint);
-      border-radius: 100px;
-      padding: 4px 12px 4px 4px;
-      font-size: 12px;
-      font-weight: 400;
-      color: var(--navy);
-    }
-
-    .guesser-chip .chip-bubble {
-      width: 22px;
-      height: 22px;
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 9px;
-      font-weight: 600;
-      color: #fff;
-      text-transform: uppercase;
-      flex-shrink: 0;
     }
 
     /* ── Submit form ── */
@@ -521,6 +474,7 @@
       outline: none;
       transition: border-color 0.2s ease, box-shadow 0.2s ease;
       width: 100%;
+      -webkit-appearance: none;
     }
 
     .field-group input:focus {
@@ -529,6 +483,7 @@
     }
 
     .submit-btn {
+      width: 100%;
       background: var(--navy);
       color: #fff;
       border: none;
@@ -540,6 +495,7 @@
       cursor: pointer;
       transition: background 0.2s ease, transform 0.15s ease;
       letter-spacing: 0.04em;
+      -webkit-tap-highlight-color: transparent;
     }
 
     .submit-btn:hover {
@@ -575,9 +531,98 @@
       from { opacity: 0; transform: translateY(18px); }
       to   { opacity: 1; transform: translateY(0); }
     }
+
+    /* ── Popular dates expandable ── */
+    .popular-count {
+      cursor: pointer;
+      border-radius: 100px;
+      padding: 4px 0;
+      background: var(--blue-tint);
+      color: var(--blue-deep);
+      font-size: 12px;
+      font-weight: 500;
+      white-space: nowrap;
+      user-select: none;
+      border: none;
+      font-family: 'DM Sans', sans-serif;
+      flex-shrink: 0;
+      width: 88px;
+      text-align: center;
+      align-self: center;
+      transition: background 0.15s, color 0.15s;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .popular-count:hover { background: var(--blue-light); }
+    .popular-count.open  { background: var(--navy); color: #fff; }
+
+    .popular-guessers {
+      display: none;
+      flex-wrap: wrap;
+      gap: 8px;
+      padding: 10px 0 2px 32px;
+    }
+    .popular-guessers.open { display: flex; }
+
+    .guesser-chip {
+      display: flex; align-items: center; gap: 6px;
+      background: var(--blue-tint);
+      border-radius: 100px;
+      padding: 4px 12px 4px 4px;
+      font-size: 12px; color: var(--navy);
+    }
+    .chip-bubble {
+      width: 22px; height: 22px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 9px; font-weight: 600; color: #fff;
+      text-transform: uppercase; flex-shrink: 0;
+    }
+
+    /* ── Mobile ─────────────────────────────────────────── */
+    @media (max-width: 620px) {
+      .page-wrap { padding: 28px 14px 60px; }
+      header { margin-bottom: 36px; }
+      .header-eyebrow { font-size: 10px; margin-bottom: 10px; }
+      .header-sub { font-size: 13px; }
+      .due-date-pill { font-size: 11px; padding: 7px 16px; }
+
+      /* Hide outside desktop arrows; card fills full width */
+      .nav-side { display: none; }
+      .cal-outer { gap: 0; }
+      .month-card { border-radius: 16px; padding: 16px 12px; }
+
+      /* Swap title rows */
+      .month-title-desktop { display: none; }
+      .month-title-mobile  { display: flex; }
+
+      /* Grid */
+      .calendar-grid { gap: 2px; }
+      .day-header { font-size: 9px; letter-spacing: 0.03em; padding: 2px 0 7px; }
+      .day-cell { min-height: 58px; border-radius: 7px; padding: 5px 1px; }
+      .day-cell.empty { min-height: 58px; }
+      .day-num { font-size: 9.5px; }
+      .due-label { font-size: 5.5px; }
+      .bubble { width: 18px; height: 18px; font-size: 7px; }
+      .bubbles-wrap { gap: 1px; }
+
+      /* Popular */
+      #popular-wrap { padding: 18px 14px; border-radius: 16px; }
+      .popular-title { font-size: 17px; }
+      .popular-sub   { font-size: 12px; margin-bottom: 16px; }
+      .popular-bar-label { font-size: 11px; }
+      .popular-count { font-size: 11px; padding: 3px 0; width: 72px; }
+      .popular-guessers { padding: 8px 0 2px 28px; gap: 6px; }
+      .guesser-chip { font-size: 11px; }
+
+      /* Form */
+      .submit-section { padding: 22px 16px; border-radius: 16px; }
+      .submit-section h2 { font-size: 20px; }
+      .form-row { grid-template-columns: 1fr; gap: 12px; }
+    }
   </style>
 </head>
 <body>
+<div id="bubble-tooltip"></div>
+
 <div class="page-wrap">
 
   <!-- Header -->
@@ -595,25 +640,47 @@
     <span class="spinner"></span> Loading guesses…
   </div>
 
-  <!-- Calendar: single month with prev/next nav -->
+  <!-- Calendar -->
   <div id="calendar-wrap" style="display:none; margin-bottom:36px;">
-    <div class="month-card">
-      <div class="month-nav">
-        <button class="nav-btn" id="btn-prev" onclick="changeMonth(-1)" disabled>&#8592;</button>
-        <div class="month-title-center">
-          <h2 id="month-heading"></h2>
-          <div class="guess-count" id="month-guess-count"></div>
-        </div>
-        <button class="nav-btn" id="btn-next" onclick="changeMonth(1)">&#8594;</button>
+    <div class="cal-outer">
+
+      <!-- Desktop: left arrow outside the card -->
+      <div class="nav-side" id="nav-left" style="visibility:hidden;">
+        <button class="nav-btn" id="btn-prev-d" onclick="changeMonth(-1)">&#8592;</button>
+        <div class="nav-label" id="prev-label-d"></div>
       </div>
-      <div class="calendar-grid" id="calendar-grid"></div>
+
+      <div class="month-card">
+        <!-- Desktop: centred title, no inline arrows -->
+        <div class="month-title-desktop">
+          <h2 id="heading-d"></h2>
+          <div class="guess-count" id="count-d"></div>
+        </div>
+        <!-- Mobile: arrows flanking month name -->
+        <div class="month-title-mobile">
+          <button class="nav-btn" id="btn-prev-m" onclick="changeMonth(-1)">&#8592;</button>
+          <div class="mobile-month-text">
+            <h2 id="heading-m"></h2>
+            <div class="guess-count" id="count-m"></div>
+          </div>
+          <button class="nav-btn" id="btn-next-m" onclick="changeMonth(1)">&#8594;</button>
+        </div>
+        <div class="calendar-grid" id="calendar-grid"></div>
+      </div>
+
+      <!-- Desktop: right arrow outside the card -->
+      <div class="nav-side" id="nav-right">
+        <button class="nav-btn" id="btn-next-d" onclick="changeMonth(1)">&#8594;</button>
+        <div class="nav-label" id="next-label-d"></div>
+      </div>
+
     </div>
   </div>
 
   <!-- Popular dates -->
   <div id="popular-wrap" style="display:none;">
     <p class="popular-title">Most popular dates</p>
-    <p class="popular-sub">The dates everyone's clustering around — no names, just the numbers.</p>
+    <p class="popular-sub">Tap a count to show or hide who guessed it.</p>
     <div class="popular-list" id="popular-list"></div>
   </div>
 
@@ -720,32 +787,75 @@
     document.getElementById("popular-wrap").style.display = "block";
   }
 
+  // ── Tooltip (JS-driven, works on desktop click + mobile tap) ──
+  const tooltipEl  = document.getElementById("bubble-tooltip");
+  let activeBubble = null;
+
+  function showTooltip(bubble) {
+    if (activeBubble) activeBubble.classList.remove("active");
+    activeBubble = bubble;
+    bubble.classList.add("active");
+    tooltipEl.textContent = bubble.dataset.name;
+    tooltipEl.classList.add("show");
+    const r  = bubble.getBoundingClientRect();
+    const tw = tooltipEl.offsetWidth  || 100;
+    const th = tooltipEl.offsetHeight || 28;
+    const left = Math.max(8, Math.min(r.left + r.width / 2 - tw / 2, window.innerWidth - tw - 8));
+    tooltipEl.style.left = left + "px";
+    tooltipEl.style.top  = (r.top - th - 10) + "px";
+  }
+
+  function hideTooltip() {
+    tooltipEl.classList.remove("show");
+    if (activeBubble) activeBubble.classList.remove("active");
+    activeBubble = null;
+  }
+
+  document.addEventListener("click", function(e) {
+    if (!e.target.classList.contains("bubble")) hideTooltip();
+  });
+
   // ── Month navigation ─────────────────────────────────────
   function changeMonth(dir) {
-    currentMonthIndex = Math.max(0, Math.min(1, currentMonthIndex + dir));
+    currentMonthIndex = Math.max(0, Math.min(MONTHS.length - 1, currentMonthIndex + dir));
+    hideTooltip();
     renderMonth(currentMonthIndex);
   }
 
   function renderMonth(idx) {
     const { year, month, label } = MONTHS[idx];
+    const onFirst = idx === 0;
+    const onLast  = idx === MONTHS.length - 1;
 
-    // Update heading
-    document.getElementById("month-heading").textContent = label;
-
-    // Guess count for this month
     const count = globalGuesses.filter(g => {
       const [gy, gm] = g.date.split("-").map(Number);
       return gy === year && gm === month;
     }).length;
     const countLabel = count === 0 ? "No guesses yet"
       : count === 1 ? "1 guess" : `${count} guesses`;
-    document.getElementById("month-guess-count").textContent = countLabel;
 
-    // Prev/next button states
-    document.getElementById("btn-prev").disabled = idx === 0;
-    document.getElementById("btn-next").disabled = idx === MONTHS.length - 1;
+    // Update both desktop and mobile headings
+    document.getElementById("heading-d").textContent = label;
+    document.getElementById("count-d").textContent   = countLabel;
+    document.getElementById("heading-m").textContent = label;
+    document.getElementById("count-m").textContent   = countLabel;
+
+    // Desktop outside arrows
+    document.getElementById("btn-prev-d").disabled = onFirst;
+    document.getElementById("btn-next-d").disabled = onLast;
+    document.getElementById("nav-left").style.visibility  = onFirst ? "hidden" : "visible";
+    document.getElementById("nav-right").style.visibility = onLast  ? "hidden" : "visible";
+    document.getElementById("prev-label-d").textContent = !onFirst ? MONTHS[idx-1].label.split(" ")[0] : "";
+    document.getElementById("next-label-d").textContent = !onLast  ? MONTHS[idx+1].label.split(" ")[0] : "";
+
+    // Mobile inline arrows
+    document.getElementById("btn-prev-m").disabled = onFirst;
+    document.getElementById("btn-next-m").disabled = onLast;
+    document.getElementById("btn-prev-m").style.visibility = onFirst ? "hidden" : "visible";
+    document.getElementById("btn-next-m").style.visibility = onLast  ? "hidden" : "visible";
 
     // Build grid
+    hideTooltip();
     const grid = document.getElementById("calendar-grid");
     grid.innerHTML = "";
 
@@ -788,6 +898,15 @@
       cell.innerHTML = inner;
       grid.appendChild(cell);
     }
+
+    // Attach click/tap listeners to every bubble
+    grid.querySelectorAll(".bubble").forEach(b => {
+      b.addEventListener("click", function(e) {
+        e.stopPropagation();
+        activeBubble === b && tooltipEl.classList.contains("show")
+          ? hideTooltip() : showTooltip(b);
+      });
+    });
   }
 
   // ── Popular dates ─────────────────────────────────────────
@@ -797,7 +916,6 @@
 
     const entries = Object.entries(map)
       .map(([date, guessers]) => ({ date, count: guessers.length }))
-      .filter(e => e.count > 0)
       .sort((a, b) => b.count - a.count)
       .slice(0, 5);
 
@@ -814,7 +932,6 @@
       const textDark  = pct < 30;
       const countWord = entry.count === 1 ? "1 guess" : `${entry.count} guesses`;
 
-      // Build the guesser chips HTML
       const chipsHtml = map[entry.date].map(g =>
         `<div class="guesser-chip">
           <div class="chip-bubble" style="background:${g.colour}">${g.name.charAt(0)}</div>
@@ -822,16 +939,13 @@
         </div>`
       ).join("");
 
-      // Wrap: bar row + expandable guesser panel
       const wrap = document.createElement("div");
       wrap.innerHTML = `
         <div class="popular-row">
           <div class="popular-rank">${i + 1}.</div>
           <div class="popular-bar-wrap">
             <div class="popular-bar" style="width:${barWidth}%"></div>
-            <div class="popular-bar-label ${textDark ? "dark" : ""}">
-              ${formatDisplay(entry.date)}
-            </div>
+            <div class="popular-bar-label${textDark ? " dark" : ""}">${formatDisplay(entry.date)}</div>
           </div>
           <button class="popular-count open" onclick="toggleGuessers(this)">${countWord}</button>
         </div>
@@ -843,9 +957,9 @@
 
   function toggleGuessers(btn) {
     const panel = btn.closest(".popular-row").nextElementSibling;
-    const isOpen = panel.classList.contains("open");
-    panel.classList.toggle("open", !isOpen);
-    btn.classList.toggle("open", !isOpen);
+    const open  = panel.classList.contains("open");
+    panel.classList.toggle("open", !open);
+    btn.classList.toggle("open", !open);
   }
 
   // ── Submit ───────────────────────────────────────────────
