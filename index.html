@@ -1,0 +1,808 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Baby Boy Guess Tracker 🩵</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,400&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500&display=swap" rel="stylesheet" />
+
+  <style>
+    :root {
+      --bg:           #f2f7fc;
+      --warm-white:   #ffffff;
+      --blue-tint:    #e4f0f9;
+      --blue-light:   #c8dff2;
+      --blue-mid:     #6fa8d0;
+      --blue-deep:    #2a5f8a;
+      --navy:         #162d42;
+      --mid:          #4a6a85;
+      --light-mid:    #8aaec8;
+      --card-shadow:  0 4px 28px rgba(22,45,66,0.09);
+      --card-hover:   0 8px 44px rgba(22,45,66,0.15);
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background-color: var(--bg);
+      color: var(--navy);
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image:
+        radial-gradient(ellipse 80% 55% at 15% -5%, #d6eaf8 0%, transparent 55%),
+        radial-gradient(ellipse 60% 45% at 88% 95%, #dceef8 0%, transparent 55%);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .page-wrap {
+      position: relative;
+      z-index: 1;
+      max-width: 960px;
+      margin: 0 auto;
+      padding: 52px 24px 88px;
+    }
+
+    /* ── Header ── */
+    header {
+      text-align: center;
+      margin-bottom: 60px;
+      animation: fadeUp 0.6s ease both;
+    }
+
+    .header-eyebrow {
+      font-size: 12px;
+      font-weight: 500;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--blue-mid);
+      margin-bottom: 14px;
+    }
+
+    header h1 {
+      font-family: 'Playfair Display', serif;
+      font-weight: 700;
+      font-size: clamp(34px, 6.5vw, 62px);
+      line-height: 1.1;
+      color: var(--navy);
+      margin-bottom: 16px;
+    }
+
+    header h1 em {
+      font-style: italic;
+      font-weight: 400;
+      color: var(--blue-deep);
+    }
+
+    .header-sub {
+      font-size: 15px;
+      font-weight: 300;
+      color: var(--mid);
+      line-height: 1.65;
+      max-width: 420px;
+      margin: 0 auto 24px;
+    }
+
+    .due-date-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--navy);
+      color: #fff;
+      padding: 9px 22px;
+      border-radius: 100px;
+      font-size: 13px;
+      font-weight: 500;
+      letter-spacing: 0.04em;
+    }
+
+    .due-date-pill span { color: var(--blue-light); }
+
+    /* ── Status ── */
+    #status-message {
+      text-align: center;
+      padding: 56px;
+      font-size: 15px;
+      color: var(--mid);
+      font-weight: 300;
+    }
+
+    .spinner {
+      display: inline-block;
+      width: 18px; height: 18px;
+      border: 2px solid var(--blue-light);
+      border-top-color: var(--blue-deep);
+      border-radius: 50%;
+      animation: spin 0.75s linear infinite;
+      margin-right: 10px;
+      vertical-align: middle;
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ── Calendars ── */
+    #calendars {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(380px, 1fr));
+      gap: 28px;
+      margin-bottom: 36px;
+      animation: fadeUp 0.6s 0.12s ease both;
+    }
+
+    .month-card {
+      background: var(--warm-white);
+      border-radius: 22px;
+      padding: 28px 24px;
+      box-shadow: var(--card-shadow);
+      transition: box-shadow 0.3s ease;
+    }
+
+    .month-card:hover { box-shadow: var(--card-hover); }
+
+    .month-title {
+      font-family: 'Playfair Display', serif;
+      font-size: 22px;
+      font-weight: 700;
+      color: var(--navy);
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .month-title .guess-count {
+      font-family: 'DM Sans', sans-serif;
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--light-mid);
+      letter-spacing: 0.06em;
+    }
+
+    .calendar-grid {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 4px;
+    }
+
+    .day-header {
+      text-align: center;
+      font-size: 10px;
+      font-weight: 500;
+      letter-spacing: 0.08em;
+      color: var(--light-mid);
+      padding: 4px 0 8px;
+      text-transform: uppercase;
+    }
+
+    .day-cell {
+      border-radius: 10px;
+      padding: 6px 4px 6px;
+      min-height: 72px;
+      position: relative;
+      transition: background 0.15s ease;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .day-cell.empty { background: transparent; min-height: 72px; }
+
+    .day-cell.has-date { background: transparent; }
+    .day-cell.has-date:hover { background: var(--blue-tint); }
+
+    .day-cell.is-due {
+      background: linear-gradient(135deg, #e8f4fc, #d4eaf8);
+      border: 1.5px solid var(--blue-light);
+    }
+
+    .day-cell.is-due .day-num { color: var(--blue-deep); font-weight: 600; }
+
+    .day-num {
+      font-size: 11px;
+      font-weight: 400;
+      color: var(--mid);
+      margin-bottom: 4px;
+      text-align: center;
+      line-height: 1;
+    }
+
+    .due-label {
+      font-size: 7.5px;
+      color: var(--blue-mid);
+      letter-spacing: 0.04em;
+      margin-bottom: 3px;
+      text-align: center;
+    }
+
+    /* ── Bubbles ── */
+    .bubbles-wrap {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 2px;
+      justify-content: center;
+      margin-top: auto;
+    }
+
+    .bubble {
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 9.5px;
+      font-weight: 600;
+      color: #fff;
+      cursor: default;
+      position: relative;
+      flex-shrink: 0;
+      transition: transform 0.15s ease, box-shadow 0.15s ease;
+      text-transform: uppercase;
+      letter-spacing: 0;
+    }
+
+    .bubble:hover {
+      transform: scale(1.35);
+      box-shadow: 0 3px 14px rgba(0,0,0,0.22);
+      z-index: 20;
+    }
+
+    .bubble::after {
+      content: attr(data-name);
+      position: absolute;
+      bottom: calc(100% + 7px);
+      left: 50%;
+      transform: translateX(-50%);
+      background: var(--navy);
+      color: #fff;
+      padding: 4px 10px;
+      border-radius: 6px;
+      font-size: 11px;
+      font-weight: 400;
+      white-space: nowrap;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.15s ease;
+      z-index: 30;
+    }
+
+    .bubble::before {
+      content: '';
+      position: absolute;
+      bottom: calc(100% + 3px);
+      left: 50%;
+      transform: translateX(-50%);
+      border: 4px solid transparent;
+      border-top-color: var(--navy);
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.15s ease;
+      z-index: 30;
+    }
+
+    .bubble:hover::after,
+    .bubble:hover::before { opacity: 1; }
+
+    /* ── Popular dates section ── */
+    #popular-wrap {
+      margin-bottom: 40px;
+      background: var(--warm-white);
+      border-radius: 20px;
+      padding: 28px 28px;
+      box-shadow: var(--card-shadow);
+      animation: fadeUp 0.6s 0.22s ease both;
+    }
+
+    .popular-title {
+      font-family: 'Playfair Display', serif;
+      font-size: 20px;
+      font-weight: 700;
+      color: var(--navy);
+      margin-bottom: 6px;
+    }
+
+    .popular-sub {
+      font-size: 13px;
+      font-weight: 300;
+      color: var(--mid);
+      margin-bottom: 22px;
+    }
+
+    .popular-list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .popular-row {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .popular-rank {
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--light-mid);
+      width: 20px;
+      text-align: right;
+      flex-shrink: 0;
+    }
+
+    .popular-bar-wrap {
+      flex: 1;
+      background: var(--blue-tint);
+      border-radius: 100px;
+      height: 32px;
+      display: flex;
+      align-items: center;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .popular-bar {
+      height: 100%;
+      border-radius: 100px;
+      background: linear-gradient(90deg, var(--blue-deep), var(--blue-mid));
+      transition: width 0.6s ease;
+      min-width: 4px;
+    }
+
+    .popular-bar-label {
+      position: absolute;
+      left: 14px;
+      font-size: 13px;
+      font-weight: 500;
+      color: #fff;
+      white-space: nowrap;
+      pointer-events: none;
+    }
+
+    .popular-bar-label.dark {
+      color: var(--navy);
+      left: auto;
+      right: -120px;
+    }
+
+    .popular-count {
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--mid);
+      width: 70px;
+      text-align: left;
+      flex-shrink: 0;
+    }
+
+    .popular-empty {
+      font-size: 14px;
+      font-weight: 300;
+      color: var(--light-mid);
+    }
+
+    /* ── Submit form ── */
+    .submit-section {
+      background: var(--warm-white);
+      border-radius: 22px;
+      padding: 36px 32px;
+      box-shadow: var(--card-shadow);
+      animation: fadeUp 0.6s 0.32s ease both;
+    }
+
+    .submit-section h2 {
+      font-family: 'Playfair Display', serif;
+      font-size: 24px;
+      font-weight: 700;
+      color: var(--navy);
+      margin-bottom: 8px;
+    }
+
+    .submit-section p {
+      font-size: 14px;
+      font-weight: 300;
+      color: var(--mid);
+      margin-bottom: 28px;
+      line-height: 1.65;
+    }
+
+    .form-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin-bottom: 20px;
+    }
+
+    @media (max-width: 500px) { .form-row { grid-template-columns: 1fr; } }
+
+    .field-group { display: flex; flex-direction: column; gap: 6px; }
+
+    .field-group label {
+      font-size: 11px;
+      font-weight: 500;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--mid);
+    }
+
+    .field-group input {
+      border: 1.5px solid var(--blue-light);
+      border-radius: 10px;
+      padding: 12px 16px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 14px;
+      color: var(--navy);
+      background: var(--bg);
+      outline: none;
+      transition: border-color 0.2s ease, box-shadow 0.2s ease;
+      width: 100%;
+    }
+
+    .field-group input:focus {
+      border-color: var(--blue-deep);
+      box-shadow: 0 0 0 3px rgba(42,95,138,0.1);
+    }
+
+    .submit-btn {
+      background: var(--navy);
+      color: #fff;
+      border: none;
+      border-radius: 10px;
+      padding: 14px 32px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: background 0.2s ease, transform 0.15s ease;
+      letter-spacing: 0.04em;
+    }
+
+    .submit-btn:hover {
+      background: var(--blue-deep);
+      transform: translateY(-1px);
+    }
+
+    .submit-btn:active { transform: translateY(0); }
+    .submit-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+    .form-message {
+      margin-top: 16px;
+      padding: 12px 16px;
+      border-radius: 10px;
+      font-size: 13px;
+      line-height: 1.55;
+      display: none;
+    }
+
+    .form-message.error  { background: #fdeaea; color: #b94545; border: 1px solid #f5c0c0; }
+    .form-message.success{ background: #e8f4fd; color: #1e5f8a; border: 1px solid #b8d8f0; }
+    .form-message.visible{ display: block; }
+
+    footer {
+      text-align: center;
+      margin-top: 52px;
+      font-size: 12px;
+      color: var(--light-mid);
+      font-weight: 300;
+    }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(18px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+  </style>
+</head>
+<body>
+<div class="page-wrap">
+
+  <!-- Header -->
+  <header>
+    <p class="header-eyebrow">Tell Us Your Guess</p>
+    <h1>When will our<br><em>Baby Boy</em> arrive?</h1>
+    <p class="header-sub">Everyone's placing their bets. Find your bubble on the calendar below — and if you haven't guessed yet, scroll down to lock one in.</p>
+    <div class="due-date-pill">
+      🩵 Expected due date: <span>21st May 2026</span>
+    </div>
+  </header>
+
+  <!-- Loading -->
+  <div id="status-message">
+    <span class="spinner"></span> Loading guesses…
+  </div>
+
+  <!-- Calendars -->
+  <div id="calendars" style="display:none;"></div>
+
+  <!-- Popular dates -->
+  <div id="popular-wrap" style="display:none;">
+    <p class="popular-title">Most popular dates</p>
+    <p class="popular-sub">The dates everyone's clustering around — no names, just the numbers.</p>
+    <div class="popular-list" id="popular-list"></div>
+  </div>
+
+  <!-- Form -->
+  <div class="submit-section">
+    <h2>Make your guess</h2>
+    <p>Pick any date in May or June 2026. One guess per person — if you've already guessed and want to change it, just get in touch directly.</p>
+    <div class="form-row">
+      <div class="field-group">
+        <label for="input-name">Your first name</label>
+        <input type="text" id="input-name" placeholder="e.g. Sarah" autocomplete="off" />
+      </div>
+      <div class="field-group">
+        <label for="input-date">Your guess</label>
+        <input type="date" id="input-date" min="2026-05-01" max="2026-06-30" />
+      </div>
+    </div>
+    <button class="submit-btn" id="submit-btn" onclick="submitGuess()">Lock in my guess →</button>
+    <div class="form-message" id="form-message"></div>
+  </div>
+
+  <footer>Made with love 🩵 — refresh the page anytime to see new guesses</footer>
+
+</div>
+
+<script>
+  const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzawLru2PiFicn2VTricy1UAaRxA05-4e9exSnwmwvFedZvO6BKQvVUwANO2ac61mKz/exec";
+
+  // 20 distinct colours that work on white
+  const BUBBLE_COLOURS = [
+    "#3a7abf","#5aaa72","#c96e5a","#8a6abf","#c4a030",
+    "#5aabb8","#bf5a75","#6a8abf","#bf8a40","#5abf9a",
+    "#9e5abf","#bf9e40","#5a75bf","#bf5a5a","#5abf6e",
+    "#bf5aaa","#6ebf5a","#5a9ebf","#bf6e3a","#8abf5a"
+  ];
+
+  function colourForName(name) {
+    let h = 0;
+    for (let i = 0; i < name.length; i++) h = name.charCodeAt(i) + ((h << 5) - h);
+    return BUBBLE_COLOURS[Math.abs(h) % BUBBLE_COLOURS.length];
+  }
+
+  // ── Date normalisation ───────────────────────────────────
+  // Handles: "YYYY-MM-DD", "DD/MM/YYYY", "YYYY-MM-DDThh:mm:ssZ"
+  function normaliseDate(raw) {
+    if (!raw) return null;
+    const s = String(raw).trim();
+
+    // ISO with time component
+    if (s.includes("T")) return s.split("T")[0];
+
+    // Already YYYY-MM-DD
+    if (/^\d{4}-\d{2}-\d{2}$/.test(s)) return s;
+
+    // DD/MM/YYYY
+    if (/^\d{1,2}\/\d{1,2}\/\d{4}$/.test(s)) {
+      const [d, m, y] = s.split("/");
+      return `${y}-${m.padStart(2,"0")}-${d.padStart(2,"0")}`;
+    }
+
+    // MM/DD/YYYY fallback (American)
+    if (/^\d{1,2}\/\d{1,2}\/\d{4}$/.test(s)) {
+      const [m, d, y] = s.split("/");
+      return `${y}-${m.padStart(2,"0")}-${d.padStart(2,"0")}`;
+    }
+
+    return s;
+  }
+
+  function formatDisplay(dateStr) {
+    if (!dateStr) return "";
+    const norm = normaliseDate(dateStr);
+    const [y, m, d] = norm.split("-").map(Number);
+    const months = ["","January","February","March","April","May","June",
+                    "July","August","September","October","November","December"];
+    return `${d} ${months[m]} ${y}`;
+  }
+
+  // ── Fetch ────────────────────────────────────────────────
+  async function loadGuesses() {
+    try {
+      const res = await fetch(`${APPS_SCRIPT_URL}?action=getGuesses`);
+      const data = await res.json();
+      if (!data.success) throw new Error("API failure");
+      renderAll(data.guesses);
+    } catch {
+      document.getElementById("status-message").innerHTML =
+        "⚠️ Couldn't load guesses right now. Try refreshing the page.";
+    }
+  }
+
+  // ── Render ───────────────────────────────────────────────
+  function renderAll(rawGuesses) {
+    // Normalise all dates immediately
+    const guesses = rawGuesses.map(g => ({
+      name: String(g.name).trim(),
+      date: normaliseDate(g.date)
+    })).filter(g => g.date);
+
+    document.getElementById("status-message").style.display = "none";
+
+    // Build date → guessers map
+    const map = {};
+    guesses.forEach(g => {
+      if (!map[g.date]) map[g.date] = [];
+      map[g.date].push({ name: g.name, colour: colourForName(g.name) });
+    });
+
+    // Calendars
+    const calEl = document.getElementById("calendars");
+    calEl.innerHTML = "";
+    [[2026,5,"May 2026"],[2026,6,"June 2026"]].forEach(([y,m,label]) => {
+      const count = guesses.filter(g => {
+        const [gy,gm] = g.date.split("-").map(Number);
+        return gy === y && gm === m;
+      }).length;
+      calEl.appendChild(buildMonthCard(y, m, label, map, count));
+    });
+    calEl.style.display = "grid";
+
+    // Popular dates
+    renderPopular(map);
+
+    document.getElementById("popular-wrap").style.display = "block";
+  }
+
+  function buildMonthCard(year, month, label, map, guessCount) {
+    const card = document.createElement("div");
+    card.className = "month-card";
+
+    const countLabel = guessCount === 0 ? "No guesses yet"
+      : guessCount === 1 ? "1 guess" : `${guessCount} guesses`;
+
+    card.innerHTML = `
+      <div class="month-title">
+        ${label}
+        <span class="guess-count">${countLabel}</span>
+      </div>
+      <div class="calendar-grid" id="grid-${year}-${month}"></div>
+    `;
+
+    const grid = card.querySelector(`#grid-${year}-${month}`);
+
+    ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"].forEach(d => {
+      const h = document.createElement("div");
+      h.className = "day-header";
+      h.textContent = d;
+      grid.appendChild(h);
+    });
+
+    const firstDay = new Date(year, month - 1, 1).getDay();
+    const daysInMonth = new Date(year, month, 0).getDate();
+
+    for (let i = 0; i < firstDay; i++) {
+      const e = document.createElement("div");
+      e.className = "day-cell empty";
+      grid.appendChild(e);
+    }
+
+    for (let d = 1; d <= daysInMonth; d++) {
+      const dateStr = `${year}-${String(month).padStart(2,"0")}-${String(d).padStart(2,"0")}`;
+      const isDue = dateStr === "2026-05-21";
+      const onDay = map[dateStr] || [];
+
+      const cell = document.createElement("div");
+      cell.className = "day-cell has-date" + (isDue ? " is-due" : "");
+
+      let inner = `<div class="day-num">${d}</div>`;
+      if (isDue) inner += `<div class="due-label">due date ✦</div>`;
+
+      if (onDay.length > 0) {
+        inner += `<div class="bubbles-wrap">`;
+        onDay.forEach(g => {
+          inner += `<div class="bubble" style="background:${g.colour}" data-name="${g.name}">${g.name.charAt(0)}</div>`;
+        });
+        inner += `</div>`;
+      }
+
+      cell.innerHTML = inner;
+      grid.appendChild(cell);
+    }
+
+    return card;
+  }
+
+  function renderPopular(map) {
+    const listEl = document.getElementById("popular-list");
+    listEl.innerHTML = "";
+
+    const entries = Object.entries(map)
+      .map(([date, guessers]) => ({ date, count: guessers.length }))
+      .filter(e => e.count > 0)
+      .sort((a, b) => b.count - a.count)
+      .slice(0, 8); // Show top 8 at most
+
+    if (entries.length === 0) {
+      listEl.innerHTML = `<p class="popular-empty">No guesses yet — be the first to lock one in below!</p>`;
+      return;
+    }
+
+    const maxCount = entries[0].count;
+
+    entries.forEach((entry, i) => {
+      const pct = Math.round((entry.count / maxCount) * 100);
+      const countWord = entry.count === 1 ? "1 guess" : `${entry.count} guesses`;
+      const barWidth = Math.max(pct, 8); // minimum bar width so tiny bars still show
+      const textDark = pct < 25; // if bar is short, put label outside
+
+      const row = document.createElement("div");
+      row.className = "popular-row";
+      row.innerHTML = `
+        <div class="popular-rank">${i + 1}.</div>
+        <div class="popular-bar-wrap">
+          <div class="popular-bar" style="width:${barWidth}%"></div>
+          <div class="popular-bar-label ${textDark ? "dark" : ""}">
+            ${formatDisplay(entry.date)}
+          </div>
+        </div>
+        <div class="popular-count">${countWord}</div>
+      `;
+      listEl.appendChild(row);
+    });
+  }
+
+  // ── Submit ───────────────────────────────────────────────
+  async function submitGuess() {
+    const nameEl = document.getElementById("input-name");
+    const dateEl = document.getElementById("input-date");
+    const btn    = document.getElementById("submit-btn");
+
+    const name = nameEl.value.trim();
+    const date = dateEl.value;
+
+    if (!name) return showMsg("error", "Please enter your first name.");
+    if (!date) return showMsg("error", "Please pick a date.");
+
+    const [y, m] = date.split("-").map(Number);
+    if (y !== 2026 || (m !== 5 && m !== 6)) {
+      return showMsg("error", "Please pick a date in May or June 2026.");
+    }
+
+    btn.disabled = true;
+    btn.textContent = "Locking in…";
+    document.getElementById("form-message").className = "form-message";
+
+    try {
+      const res = await fetch(APPS_SCRIPT_URL, {
+        method: "POST",
+        body: JSON.stringify({ action: "addGuess", name, date }),
+      });
+      const data = await res.json();
+
+      if (data.success) {
+        showMsg("success", `🎉 Thanks ${name}! Your guess for ${formatDisplay(date)} is locked in. Good luck!`);
+        nameEl.value = "";
+        dateEl.value = "";
+        loadGuesses();
+      } else if (data.error === "NAME_EXISTS") {
+        showMsg("error", `Looks like someone called "${name}" has already guessed! If that's you and you want to change it, get in touch directly.`);
+      } else if (data.error === "INVALID_DATE") {
+        showMsg("error", "Please pick a date within May or June 2026.");
+      } else {
+        showMsg("error", "Something went wrong. Try again in a moment.");
+      }
+    } catch {
+      showMsg("error", "Couldn't connect right now. Check your internet and try again.");
+    }
+
+    btn.disabled = false;
+    btn.textContent = "Lock in my guess →";
+  }
+
+  function showMsg(type, text) {
+    const el = document.getElementById("form-message");
+    el.className = `form-message ${type} visible`;
+    el.textContent = text;
+  }
+
+  loadGuesses();
+</script>
+</body>
+</html>
