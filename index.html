@@ -634,7 +634,9 @@
       font-size: 20px;
       font-weight: 700;
       color: var(--navy);
-      margin-bottom: 6px;
+      margin-bottom: 20px;
+      padding-bottom: 16px;
+      border-bottom: 1px solid var(--blue-light);
     }
 
     .family-sub {
@@ -648,15 +650,15 @@
     .family-panels {
       display: grid;
       grid-template-columns: 1fr 2fr;
-      gap: 0;
+      gap: 16px;
+    }
+
+    /* Each panel is its own bordered card */
+    .family-panel {
+      padding: 0;
       border: 1.5px solid var(--blue-light);
       border-radius: 14px;
       overflow: hidden;
-    }
-
-    /* Parents panel */
-    .family-panel {
-      padding: 0;
     }
 
     .family-panel-title {
@@ -670,15 +672,15 @@
       background: var(--blue-tint);
     }
 
-    .family-panel + .family-panel {
-      border-left: 1.5px solid var(--blue-light);
-    }
+
 
     /* Parent rows */
     .parent-row {
       padding: 16px 20px;
       display: flex;
       flex-direction: column;
+      align-items: center;
+      text-align: center;
       gap: 8px;
     }
 
@@ -758,8 +760,9 @@
       padding: 16px;
       display: flex;
       flex-direction: column;
+      align-items: center;
+      text-align: center;
       gap: 8px;
-      position: relative;
     }
 
     .gp-cell:nth-child(odd) {
@@ -782,12 +785,106 @@
     @media (max-width: 620px) {
       #family-wrap { padding: 18px 14px; border-radius: 16px; }
       .family-title { font-size: 17px; }
-      .family-panels { grid-template-columns: 1fr; }
-      .family-panel + .family-panel { border-left: none; border-top: 1.5px solid var(--blue-light); }
+      .family-panels { grid-template-columns: 1fr; gap: 12px; }
+      .family-panel + .family-panel { margin-top: 0; }
       .gp-col-header { padding: 10px 10px 8px; font-size: 10px; }
       .gp-cell { padding: 12px 10px; }
       .parent-row { padding: 14px 16px; }
       .parent-date { font-size: 15px; }
+    }
+
+    /* ── Floating guess button ──────────────────── */
+    #float-btn {
+      position: fixed;
+      bottom: 28px;
+      right: 28px;
+      background: var(--navy);
+      color: #fff;
+      border: none;
+      border-radius: 100px;
+      padding: 14px 24px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      box-shadow: 0 6px 24px rgba(22,45,66,0.28);
+      z-index: 500;
+      transition: background 0.2s, transform 0.2s, opacity 0.2s;
+      letter-spacing: 0.04em;
+      -webkit-tap-highlight-color: transparent;
+    }
+    #float-btn:hover { background: var(--blue-deep); transform: translateY(-2px); }
+    #float-btn.hidden { opacity: 0; pointer-events: none; transform: translateY(8px); }
+
+    /* Dim overlay */
+    #float-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(22,45,66,0.35);
+      z-index: 600;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.25s ease;
+    }
+    #float-overlay.open { opacity: 1; pointer-events: all; }
+
+    /* Slide-up panel */
+    #float-panel {
+      position: fixed;
+      bottom: 0;
+      left: 50%;
+      transform: translateX(-50%) translateY(100%);
+      width: min(560px, 100%);
+      background: var(--warm-white);
+      border-radius: 22px 22px 0 0;
+      padding: 32px 32px 44px;
+      box-shadow: 0 -8px 40px rgba(22,45,66,0.18);
+      z-index: 700;
+      transition: transform 0.32s cubic-bezier(0.32, 0.72, 0, 1);
+    }
+    #float-panel.open { transform: translateX(-50%) translateY(0); }
+
+    .float-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      margin-bottom: 8px;
+    }
+    .float-header h2 {
+      font-family: 'Playfair Display', serif;
+      font-size: 22px;
+      font-weight: 700;
+      color: var(--navy);
+    }
+    #float-close {
+      width: 32px; height: 32px;
+      border-radius: 50%;
+      border: 1.5px solid var(--blue-light);
+      background: var(--blue-tint);
+      color: var(--mid);
+      font-size: 16px;
+      line-height: 1;
+      cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+      margin-top: -2px;
+      transition: background 0.15s, border-color 0.15s;
+      -webkit-tap-highlight-color: transparent;
+    }
+    #float-close:hover { background: var(--blue-light); border-color: var(--blue-mid); }
+
+    .float-sub {
+      font-size: 13px;
+      font-weight: 300;
+      color: var(--mid);
+      margin-bottom: 22px;
+      line-height: 1.6;
+    }
+
+    @media (max-width: 620px) {
+      #float-btn { bottom: 20px; right: 16px; padding: 12px 20px; font-size: 13px; }
+      #float-panel { padding: 24px 18px 40px; border-radius: 18px 18px 0 0; }
+      .float-header h2 { font-size: 19px; }
     }
   </style>
 </head>
@@ -857,30 +954,39 @@
 
   <!-- Family guesses -->
   <div id="family-wrap" style="display:none;">
-    <p class="family-title">Parents &amp; Grandparents</p>
-    <p class="family-sub">How the family is calling it.</p>
+    <p class="family-title">Parents &amp; Grandparents Guesses</p>
     <div class="family-panels" id="family-panels"></div>
   </div>
 
-  <!-- Form -->
-  <div class="submit-section">
-    <h2>Make your guess</h2>
-    <p>Pick any date in May or June 2026. One guess per person — if you've already guessed and want to change it, just get in touch directly.</p>
-    <div class="form-row">
-      <div class="field-group">
-        <label for="input-name">Your first name</label>
-        <input type="text" id="input-name" placeholder="e.g. Sarah" autocomplete="off" />
-      </div>
-      <div class="field-group">
-        <label for="input-date">Your guess</label>
-        <input type="date" id="input-date" min="2026-05-01" max="2026-06-30" />
-      </div>
-    </div>
-    <button class="submit-btn" id="submit-btn" onclick="submitGuess()">Lock in my guess →</button>
-    <div class="form-message" id="form-message"></div>
-  </div>
-
   <footer>Made with love 🩵 — refresh the page anytime to see new guesses</footer>
+
+
+<!-- Floating button -->
+<button id="float-btn" onclick="openFloat()">Make your guess &#8594;</button>
+
+<!-- Overlay -->
+<div id="float-overlay" onclick="closeFloat()"></div>
+
+<!-- Slide-up form panel -->
+<div id="float-panel">
+  <div class="float-header">
+    <h2>Make your guess</h2>
+    <button id="float-close" onclick="closeFloat()">&#10005;</button>
+  </div>
+  <p class="float-sub">Pick any date in May or June 2026. One guess per person &mdash; if you've already guessed and want to change it, just get in touch.</p>
+  <div class="form-row">
+    <div class="field-group">
+      <label for="float-name">Your first name</label>
+      <input type="text" id="float-name" placeholder="e.g. Sarah" autocomplete="off" />
+    </div>
+    <div class="field-group">
+      <label for="float-date">Your guess</label>
+      <input type="date" id="float-date" min="2026-05-01" max="2026-06-30" />
+    </div>
+  </div>
+  <button class="submit-btn" id="float-submit" onclick="submitFloat()">Lock in my guess &#8594;</button>
+  <div class="form-message" id="float-msg"></div>
+</div>
 
 </div>
 
@@ -947,8 +1053,10 @@
   // ── Render ───────────────────────────────────────────────
   function renderAll(rawGuesses) {
     globalGuesses = rawGuesses.map(g => ({
-      name: String(g.name).trim(),
-      date: normaliseDate(g.date)
+      name:    String(g.name).trim(),
+      date:    normaliseDate(g.date),
+      segment: String(g.segment || "").trim(),
+      side:    String(g.side    || "").trim()
     })).filter(g => g.date);
 
     globalMap = {};
@@ -1174,7 +1282,6 @@
     const dadGrandfather  = family.find(g => g.segment === "Grandfather" && g.side === "Dad");
 
     gpPanel.innerHTML = `
-      <div class="family-panel-title">Grandparents' Guess</div>
       <div class="gp-grid">
         <div class="gp-col-header">Grandmother</div>
         <div class="gp-col-header">Grandfather</div>
@@ -1282,7 +1389,82 @@
     el.textContent = text;
   }
 
+  // ── Floating panel ────────────────────────────
+  function openFloat() {
+    document.getElementById("float-panel").classList.add("open");
+    document.getElementById("float-overlay").classList.add("open");
+    document.getElementById("float-btn").classList.add("hidden");
+    setTimeout(function() { document.getElementById("float-name").focus(); }, 320);
+  }
+
+  function closeFloat() {
+    document.getElementById("float-panel").classList.remove("open");
+    document.getElementById("float-overlay").classList.remove("open");
+    document.getElementById("float-btn").classList.remove("hidden");
+    document.getElementById("float-msg").className = "form-message";
+  }
+
+  document.addEventListener("keydown", function(e) {
+    if (e.key === "Escape") closeFloat();
+  });
+
+  async function submitFloat() {
+    const nameEl = document.getElementById("float-name");
+    const dateEl = document.getElementById("float-date");
+    const btn    = document.getElementById("float-submit");
+
+    const name = nameEl.value.trim();
+    const date = dateEl.value;
+
+    if (!name) return showFloatMsg("error", "Please enter your first name.");
+    if (!date) return showFloatMsg("error", "Please pick a date.");
+
+    const [y, m] = date.split("-").map(Number);
+    if (y !== 2026 || (m !== 5 && m !== 6))
+      return showFloatMsg("error", "Please pick a date in May or June 2026.");
+
+    btn.disabled = true;
+    btn.textContent = "Locking in...";
+    document.getElementById("float-msg").className = "form-message";
+
+    try {
+      const res  = await fetch(APPS_SCRIPT_URL, {
+        method: "POST",
+        body: JSON.stringify({ action: "addGuess", name, date })
+      });
+      const data = await res.json();
+
+      if (data.success) {
+        showFloatMsg("success", "Locked in! Closing in a moment...");
+        nameEl.value = "";
+        dateEl.value = "";
+        currentMonthIndex = m === 5 ? 0 : 1;
+        loadGuesses();
+        setTimeout(closeFloat, 2200);
+      } else if (data.error === "NAME_EXISTS") {
+        showFloatMsg("error", "Someone called \"" + name + "\" has already guessed! Want to change it? Get in touch.");
+      } else if (data.error === "INVALID_DATE") {
+        showFloatMsg("error", "Please pick a date within May or June 2026.");
+      } else {
+        showFloatMsg("error", "Something went wrong. Try again in a moment.");
+      }
+    } catch(e) {
+      showFloatMsg("error", "Couldn't connect. Check your internet and try again.");
+    }
+
+    btn.disabled = false;
+    btn.textContent = "Lock in my guess →";
+  }
+
+  function showFloatMsg(type, text) {
+    const el = document.getElementById("float-msg");
+    el.className = "form-message " + type + " visible";
+    el.textContent = text;
+  }
+
+
   loadGuesses();
+  openFloat();
 </script>
 </body>
 </html>
