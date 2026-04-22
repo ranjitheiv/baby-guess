@@ -618,6 +618,177 @@
       .submit-section h2 { font-size: 20px; }
       .form-row { grid-template-columns: 1fr; gap: 12px; }
     }
+
+    /* ── Family guesses section ─────────────────── */
+    #family-wrap {
+      margin-bottom: 40px;
+      background: var(--warm-white);
+      border-radius: 20px;
+      padding: 28px;
+      box-shadow: var(--card-shadow);
+      animation: fadeUp 0.6s 0.28s ease both;
+    }
+
+    .family-title {
+      font-family: 'Playfair Display', serif;
+      font-size: 20px;
+      font-weight: 700;
+      color: var(--navy);
+      margin-bottom: 6px;
+    }
+
+    .family-sub {
+      font-size: 13px;
+      font-weight: 300;
+      color: var(--mid);
+      margin-bottom: 22px;
+    }
+
+    /* Two-panel layout */
+    .family-panels {
+      display: grid;
+      grid-template-columns: 1fr 2fr;
+      gap: 0;
+      border: 1.5px solid var(--blue-light);
+      border-radius: 14px;
+      overflow: hidden;
+    }
+
+    /* Parents panel */
+    .family-panel {
+      padding: 0;
+    }
+
+    .family-panel-title {
+      font-size: 11px;
+      font-weight: 500;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--light-mid);
+      padding: 14px 20px 10px;
+      border-bottom: 1px solid var(--blue-light);
+      background: var(--blue-tint);
+    }
+
+    .family-panel + .family-panel {
+      border-left: 1.5px solid var(--blue-light);
+    }
+
+    /* Parent rows */
+    .parent-row {
+      padding: 16px 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .parent-row + .parent-row {
+      border-top: 1px solid var(--blue-light);
+    }
+
+    .parent-role {
+      font-size: 11px;
+      font-weight: 500;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: var(--light-mid);
+    }
+
+    .parent-date {
+      font-family: 'Playfair Display', serif;
+      font-size: 17px;
+      font-weight: 700;
+      color: var(--navy);
+    }
+
+    .parent-date.empty {
+      font-family: 'DM Sans', sans-serif;
+      font-size: 13px;
+      font-weight: 300;
+      color: var(--light-mid);
+      font-style: italic;
+    }
+
+    .parent-person {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 13px;
+      color: var(--mid);
+    }
+
+    .family-bubble {
+      width: 26px;
+      height: 26px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 10px;
+      font-weight: 600;
+      color: #fff;
+      text-transform: uppercase;
+      flex-shrink: 0;
+    }
+
+    /* Grandparents grid */
+    .gp-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      grid-template-rows: auto 1fr 1fr;
+    }
+
+    .gp-col-header {
+      font-size: 11px;
+      font-weight: 500;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--light-mid);
+      padding: 14px 16px 10px;
+      border-bottom: 1px solid var(--blue-light);
+      background: var(--blue-tint);
+      text-align: center;
+    }
+
+    .gp-col-header + .gp-col-header {
+      border-left: 1px solid var(--blue-light);
+    }
+
+    .gp-cell {
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      position: relative;
+    }
+
+    .gp-cell:nth-child(odd) {
+      border-right: 1px solid var(--blue-light);
+    }
+
+    /* Row divider between Mom's side and Dad's side rows */
+    .gp-cell.dad-row {
+      border-top: 1px solid var(--blue-light);
+    }
+
+    .gp-side-label {
+      font-size: 10px;
+      font-weight: 500;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--blue-mid);
+    }
+
+    @media (max-width: 620px) {
+      #family-wrap { padding: 18px 14px; border-radius: 16px; }
+      .family-title { font-size: 17px; }
+      .family-panels { grid-template-columns: 1fr; }
+      .family-panel + .family-panel { border-left: none; border-top: 1.5px solid var(--blue-light); }
+      .gp-col-header { padding: 10px 10px 8px; font-size: 10px; }
+      .gp-cell { padding: 12px 10px; }
+      .parent-row { padding: 14px 16px; }
+      .parent-date { font-size: 15px; }
+    }
   </style>
 </head>
 <body>
@@ -682,6 +853,13 @@
     <p class="popular-title">Most popular dates</p>
     <p class="popular-sub">Tap a count to show or hide who guessed it.</p>
     <div class="popular-list" id="popular-list"></div>
+  </div>
+
+  <!-- Family guesses -->
+  <div id="family-wrap" style="display:none;">
+    <p class="family-title">Parents &amp; Grandparents</p>
+    <p class="family-sub">How the family is calling it.</p>
+    <div class="family-panels" id="family-panels"></div>
   </div>
 
   <!-- Form -->
@@ -785,6 +963,7 @@
     renderMonth(currentMonthIndex);
     renderPopular(globalMap);
     document.getElementById("popular-wrap").style.display = "block";
+    renderFamily(globalGuesses);
   }
 
   // ── Tooltip (JS-driven, works on desktop click + mobile tap) ──
@@ -960,6 +1139,91 @@
     const open  = panel.classList.contains("open");
     panel.classList.toggle("open", !open);
     btn.classList.toggle("open", !open);
+  }
+
+  // ── Family section ────────────────────────────
+  function renderFamily(guesses) {
+    // Only people who have a segment value
+    const family = guesses.filter(g => g.segment);
+    if (family.length === 0) return;
+
+    document.getElementById("family-wrap").style.display = "block";
+    const panels = document.getElementById("family-panels");
+    panels.innerHTML = "";
+
+    // ── Parents panel ──
+    const mom = family.find(g => g.segment === "Mom");
+    const dad = family.find(g => g.segment === "Dad");
+
+    const parentPanel = document.createElement("div");
+    parentPanel.className = "family-panel";
+    parentPanel.innerHTML = `
+      <div class="family-panel-title">Parents' Guess</div>
+      ${parentRow("Mom", mom)}
+      ${parentRow("Dad", dad)}
+    `;
+    panels.appendChild(parentPanel);
+
+    // ── Grandparents panel ──
+    const gpPanel = document.createElement("div");
+    gpPanel.className = "family-panel";
+
+    const momGrandmother  = family.find(g => g.segment === "Grandmother" && g.side === "Mom");
+    const momGrandfather  = family.find(g => g.segment === "Grandfather" && g.side === "Mom");
+    const dadGrandmother  = family.find(g => g.segment === "Grandmother" && g.side === "Dad");
+    const dadGrandfather  = family.find(g => g.segment === "Grandfather" && g.side === "Dad");
+
+    gpPanel.innerHTML = `
+      <div class="family-panel-title">Grandparents' Guess</div>
+      <div class="gp-grid">
+        <div class="gp-col-header">Grandmother</div>
+        <div class="gp-col-header">Grandfather</div>
+        ${gpCell(momGrandmother, "mom-row")}
+        ${gpCell(momGrandfather, "mom-row")}
+        ${gpCell(dadGrandmother, "dad-row")}
+        ${gpCell(dadGrandfather, "dad-row")}
+      </div>
+    `;
+    panels.appendChild(gpPanel);
+  }
+
+  function parentRow(role, guess) {
+    if (!guess) {
+      return `
+        <div class="parent-row">
+          <div class="parent-role">${role}</div>
+          <div class="parent-date empty">No guess yet</div>
+        </div>`;
+    }
+    return `
+      <div class="parent-row">
+        <div class="parent-role">${role}</div>
+        <div class="parent-date">${formatDisplay(guess.date)}</div>
+        <div class="parent-person">
+          <div class="family-bubble" style="background:${colourForName(guess.name)}">${guess.name.charAt(0)}</div>
+          ${guess.name}
+        </div>
+      </div>`;
+  }
+
+  function gpCell(guess, rowClass) {
+    const sideLabel = rowClass === "mom-row" ? "Mum's side" : "Dad's side";
+    if (!guess) {
+      return `
+        <div class="gp-cell ${rowClass}">
+          <div class="gp-side-label">${sideLabel}</div>
+          <div class="parent-date empty">No guess yet</div>
+        </div>`;
+    }
+    return `
+      <div class="gp-cell ${rowClass}">
+        <div class="gp-side-label">${sideLabel}</div>
+        <div class="parent-date">${formatDisplay(guess.date)}</div>
+        <div class="parent-person">
+          <div class="family-bubble" style="background:${colourForName(guess.name)}">${guess.name.charAt(0)}</div>
+          ${guess.name}
+        </div>
+      </div>`;
   }
 
   // ── Submit ───────────────────────────────────────────────
